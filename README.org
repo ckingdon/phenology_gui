@@ -1,0 +1,44 @@
+* Phenology GUI
+This GUI is for displaying images and selecting region of interest (ROI).
+** requirement
+Python 3 and a few external modules (install them with pip install
+<module> if Python complains).
+
+** Instruction
+1. Place utils.py and session.py in the same directory and run session.py.
+
+2. You have the option to load an output csv file from previous session or start a new session.
+   - The output file from previous session should not have been altered! Work with copies if altering the file is necessary
+   - If starting a new session, select all image files by using Ctrl or Shift buttons.
+
+3. Marking ROI
+   - Select ROI using the radio option. 
+   - Create a polygon on the image.
+     - Left click adds a point
+     - Right click finalizes the polygon
+   - Repeat above steps. You can reset the ROIs with "Clear ROI" button.
+   - When you're done with the image, click "Finalize Image". This
+     will save the ROI for the next image ("Apply Previous ROI" button).
+
+4. Output
+   - Click "Save and close" to save the output csv file.
+   - The output will be a csv file with the iamge metadata, ROI coordinates, and ROI statistics
+     - Note: ROI coordinates will be a list of (x,y) values
+       - i.e. [(3,4), (10, 10), (5,2)]
+   - This is the file you can load a session with. 
+
+** Notes
+*** Modifying ROI types
+To modify the ROI types, you can edit the ROI_TYPES and ROI_COLORS variables in utils.py.
+*** Modifying the ROI statistics
+This is more complicated. You have to modify the STATS variable in
+utils.py, but the output file save the result. I need to test this.
+
+** Issues
+*** ISSUE I need access to the NAS for the actual data
+*** ISSUE Need code for extracting Camera_id and Date from the image
+On the random test images I gathered, Aditye's code using exifread
+doesn't work.  If you want to play with it, you can write the code in
+utils.py. Search for TODO and replace None with your code.
+*** TODO Create a button to save without closing
+*** TODO Test modifying ROI statistics
