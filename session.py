@@ -41,10 +41,11 @@ class PhenoSession(tk.Tk):
 
         else:
             if debug is True:
-                directory = '/home/younghoon/data/phenology/BROW022/00430/20161028141801'
-                imfiles = [os.path.join(directory, f) for f in os.listdir(directory)]
+                directory = '/home/younghoon/data/phenology/BARR002/'
             else:
-                imfiles = list(filedialog.askopenfilenames(initialdir=self.curdir))
+                # change this to askdirectory
+                directory = filedialog.askdirectory()
+            imfiles = self.read_directory(directory)                
 
             self.curdir = os.path.dirname(imfiles[0])
             for imfile in imfiles:
@@ -55,6 +56,21 @@ class PhenoSession(tk.Tk):
         # create gui
         self.create_gui(parent)
 
+    def read_directory(self, directory):
+        """ 
+        Walk through directory and read jpg files. 
+        Return list of image file paths 
+        """
+
+        imfiles = []
+        for (dirpath, dirnames, filenames) in os.walk(directory):
+            for filename in filenames:
+                ext = os.path.splitext(filename)[1]
+                if ext == ".jpg" or ext == ".jpeg":
+                    imfiles.append(os.path.join(dirpath,filename))
+
+        return imfiles
+        
     def save(self):
         """ 
         Save the output

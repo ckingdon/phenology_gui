@@ -42,8 +42,15 @@ CANVAS_SIZE variable.
 ** Issues
 *** DONE Get Camera_id and image Date
     CLOSED: [2017-04-05 Wed 17:50]
-*** TODO IO - single input and output per camera
+*** STARTED IO - single input and output per camera
 The input will be a folder associated with a camera.
+**** DONE Read all of .jpg files in the subdirectories
+     CLOSED: [2017-04-05 Wed 18:42]
+**** ISSUE Large memory requirement
+The current implementation keeps all the images around.
+i.e. for 200 images, I had 4gb memory overhead.
+
+Fix this so that only current image is opened.
 **** TODO Arrange the images in the folder by date
 **** TODO Output: create indicator for change in camera position
 *** STARTED Create a button to save without closing
@@ -58,3 +65,6 @@ The input will be a folder associated with a camera.
 **** RESOLVED Copied some data but still need access
      CLOSED: [2017-03-27 Mon 16:31]
 *** TODO Test modifying ROI statistics
+*** ISSUE Prev_ROI Function
+If image is finalized without ROI, it overwrites the previous ROI.
+This is a safe way but it might be inconvenient.
