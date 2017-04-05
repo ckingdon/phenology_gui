@@ -25,7 +25,10 @@ class PhenoSession(tk.Tk):
     def __init__(self, parent, load):
 
         # member variables
+        self.root = parent
         self.images = OrderedDict()
+        self.camera_id = tk.StringVar() # current camera_id
+        self.camera_id.set("Camera ID")
         self.roi = tk.StringVar() # current roi selection
         self.curframe = None
         self.curcoords = None
@@ -37,7 +40,11 @@ class PhenoSession(tk.Tk):
             self.load_session()
 
         else:
-            imfiles = list(filedialog.askopenfilenames(initialdir=self.curdir))
+            if debug is True:
+                directory = '/home/younghoon/data/phenology/BROW022/00430/20161028141801'
+                imfiles = [os.path.join(directory, f) for f in os.listdir(directory)]
+            else:
+                imfiles = list(filedialog.askopenfilenames(initialdir=self.curdir))
 
             self.curdir = os.path.dirname(imfiles[0])
             for imfile in imfiles:
@@ -111,13 +118,18 @@ class PhenoSession(tk.Tk):
         """
         if img_name is not None:
             if self.curframe is not None:
-                self.curframe.grid_remove()
+                self.curframe.pack_forget()
             self.curframe = self.imageframes[img_name]
-            self.curframe.grid(row=0, column=0)
+            self.curframe.pack()
 
             # update filelist
             self.filelist.clear_selection()
             self.filelist.select(img_name)
+
+            # display image name
+            self.mainframe.set_label(self.images[img_name].imfile)
+
+            self.root.wm_title("Phenology - " + img_name)
 
     def next_image(self):
         found = False
@@ -134,7 +146,14 @@ class PhenoSession(tk.Tk):
         """ 
         Mark image as processed and move to next image
         """
-                
+        # get camera_id
+        camera_id = self.camera_id.get()
+        if camera_id == "Camera ID":
+            messagebox.showerror("Error: Camera ID needed",
+                                 "Please set the Camera ID")
+            return
+        self.images[img_name].camera_id = camera_id
+
         # save coordinates
         self.curcoords = self.images[img_name].coords
         self.filelist.highlight(img_name)
@@ -144,7 +163,7 @@ class PhenoSession(tk.Tk):
         
         # completely done
         if len(self.done) == len(self.images):
-            self.quit()
+            self.save()
     
     def clear_roi(self, img_name):
         """ 
@@ -173,35 +192,26 @@ class PhenoSession(tk.Tk):
         self.mw = parent
         h = self.mw.winfo_screenheight()
         w = self.mw.winfo_screenwidth()
-        self.mw.geometry("%dx%d+0+0" % (w, h))
-
-        # create save button
-        save_button = tk.Button(
-            self.mw, text="Save and close",
-            command = lambda : self.quit())
-        save_button.config(height=10, width=10)        
-        save_button.grid(row=0, column=0, padx=10, sticky=tk.W+tk.E)
 
         # create controlbar
         controlbar = controlBar(self.mw, self)
-        controlbar.grid(row=0, column=1, padx=10, sticky=tk.W+tk.E)
+        controlbar.pack(side=tk.LEFT, fill=tk.BOTH)
         
+        # create main frame
+        self.mainframe = MainFrame(self.mw, self)
+        self.mainframe.pack(side=tk.LEFT, fill=tk.BOTH)
+
         # create filelist
         self.filelist = FileList(self.mw, self, self.images)
-        self.filelist.grid(row=1, padx=10,
-                           sticky=tk.N+tk.S)
+        self.filelist.pack(side=tk.LEFT, fill=tk.BOTH)
 
         # populate listbox with files
         for img_name in self.images:
             self.filelist.listbox.insert(tk.END, img_name)
             if img_name in self.done:
                 self.filelist.highlight(img_name)            
-
-        # create main frame
-        self.mainframe = tk.Frame(self.mw)
-        self.mainframe.grid(row=1, column=1, padx=10, 
-                            sticky=tk.N+tk.S+tk.W+tk.E)
-
+        
+        
         # create image frames
         self.imageframes = {}
         for i, img_name in enumerate(self.images):
@@ -213,6 +223,21 @@ class PhenoSession(tk.Tk):
             if i == 0:
                 self.display_image(img_name)
 
+class MainFrame(tk.Frame):
+    def __init__(self, parent, session):
+        self.session = session
+        tk.Frame.__init__(self, parent)
+        self.label = tk.Label(self, text="Current file: ")
+        self.label.pack(side=tk.TOP, fill=tk.X)
+
+    def set_label(self, img_name):
+        self.label.config(text="Current file: " + img_name)
+        self.label.update_idletasks()
+
+    def clear_label(self):
+        self.label.config(text="Current file: ")
+        self.label.update_idletasks()
+                
 class FileList(tk.Frame):
     """
     Class for the file list.
@@ -262,33 +287,39 @@ class controlBar(tk.Frame):
 
         n_types = len(ROI_TYPES)
 
+        save_button = tk.Button(
+            self, text="Save",
+            command = lambda : self.session.save())
+        save_button.config(height=5, width=10)        
+        save_button.grid(row=0, column=0, sticky=tk.W+tk.E)
+
         clear_roi_button = tk.Button(
             self, text="Clear ROI",
             command = lambda: self.session.clear_roi(
                 self.session.curframe.image.name))
-        clear_roi_button.config(height=10, width=10)
-        clear_roi_button.grid(row=0, column=0, rowspan=n_types, sticky=tk.W+tk.E)
+        clear_roi_button.config(height=5, width=10)
+        clear_roi_button.grid(row=1, column=0, sticky=tk.W+tk.E)
 
         prev_roi_button = tk.Button(
             self, text="Apply\nPrevious\nROI",
             command= lambda: self.session.prev_roi(
                 self.session.curframe.image.name))
-        prev_roi_button.config(height=10, width=10)
-        prev_roi_button.grid(row=0, column=1, rowspan=n_types, sticky=tk.W+tk.E)
+        prev_roi_button.config(height=5, width=10)
+        prev_roi_button.grid(row=2, column=0, sticky=tk.W+tk.E)
 
         skip_img_button = tk.Button(
             self, text="Skip\nImage",
             command= lambda: self.session.next_image()
         )
-        skip_img_button.config(height=10, width=10)
-        skip_img_button.grid(row=0, column=2, rowspan=n_types, sticky=tk.W+tk.E)
+        skip_img_button.config(height=5, width=10)
+        skip_img_button.grid(row=3, column=0, sticky=tk.W+tk.E)
 
         finalize_button = tk.Button(
             self, text="Finalize\nImage",
             command = lambda: self.session.finalize(
                 self.session.curframe.image.name))
-        finalize_button.config(height=10, width=10)
-        finalize_button.grid(row=0, column=3, rowspan=n_types, sticky=tk.W+tk.E)
+        finalize_button.config(height=5, width=10)
+        finalize_button.grid(row=4, column=0, sticky=tk.W+tk.E)
 
         # Radio option for ROI
         for i, roi in enumerate(ROI_TYPES):
@@ -296,7 +327,11 @@ class controlBar(tk.Frame):
                                variable=self.session.roi, value=roi,
                                foreground=ROI_COLORS[roi]
             )
-            b.grid(row=i, column=4)
+            b.grid(row=i+5, column=0, sticky=tk.W+tk.N)
+
+        camera_id_input = tk.Entry(self,
+                                   textvariable=self.session.camera_id)
+        camera_id_input.grid(row=i+7, column=0, sticky=tk.W+tk.E)
 
 class ImageFrame(tk.Frame):
     """
@@ -313,15 +348,30 @@ class ImageFrame(tk.Frame):
         image = Image.open(myImg.imfile)
         photo = ImageTk.PhotoImage(image)
 
-        self.canvas = tk.Canvas(self, bg='white', height=image.size[1],
-                           width=image.size[0])
+        xscrollbar = tk.Scrollbar(self, orient=tk.HORIZONTAL)
+        yscrollbar = tk.Scrollbar(self)
+
+        xscrollbar.pack(side=tk.TOP, fill=tk.X)
+        yscrollbar.pack(side=tk.LEFT, fill=tk.Y)
+        
+        l,w = image.size
+        self.canvas = tk.Canvas(self, bg='white',
+                                height=CANVAS_SIZE['height'],
+                                width=CANVAS_SIZE['width'],
+                                scrollregion=(0, 0, image.size[0],
+                                              image.size[1]),
+                                xscrollcommand=xscrollbar.set,
+                                yscrollcommand=yscrollbar.set)
         self.canvas.image = photo
         self.canvas.create_image(0, 0, image=photo, anchor=tk.NW)
-        self.canvas.pack()
         self.canvas.update()
         self.canvas.bind("<Button-1>", self.detect_coord)
         self.canvas.bind("<Button-3>",
                          lambda x: self.detect_coord(x, True))
+        self.canvas.pack(fill=tk.BOTH, expand=tk.YES)
+
+        xscrollbar.config(command=self.canvas.xview)
+        yscrollbar.config(command=self.canvas.yview)
 
     def detect_coord(self, event, final=False):
         # detect the coordinates of user click
@@ -378,6 +428,9 @@ class ImageFrame(tk.Frame):
                         x0, y0 = x, y
 
 root = tk.Tk()
-load = messagebox.askyesno("Load session", "Load output file?")
+if debug:
+    load=False
+else:
+    load = messagebox.askyesno("Load session", "Load output file?")
 session = PhenoSession(root, load)
 root.mainloop()

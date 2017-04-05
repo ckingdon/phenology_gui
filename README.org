@@ -34,18 +34,26 @@ To modify the ROI types, you can edit the ROI_TYPES and ROI_COLORS variables in 
 This is more complicated. You have to modify the STATS variable in
 utils.py, but the output file save the result. I need to test this.
 
+*** Modifying image canvas size
+This might be useful if a large image is causing issues with the size
+of your app. You can change the size of region dedicated for
+displaying the image (default is 1600x1200). This is in utils.py under
+CANVAS_SIZE variable.
 ** Issues
-*** ISSUE Need code for extracting Camera_id and Date from the image
-On the random test images I gathered, Aditye's code using exifread
-doesn't work.  If you want to play with it, you can write the code in
-utils.py. Search for TODO and replace None with your code.
+*** DONE Get Camera_id and image Date
+    CLOSED: [2017-04-05 Wed 17:50]
 *** TODO IO - single input and output per camera
 The input will be a folder associated with a camera.
 **** TODO Arrange the images in the folder by date
 **** TODO Output: create indicator for change in camera position
-*** TODO Create a button to save without closing
-Don't close app on "save and close". Prompt for a new folder
-*** ISSUE Add scrollbar to the canvas
+*** STARTED Create a button to save without closing
+**** DONE Don't close app on "save". 
+     CLOSED: [2017-04-05 Wed 16:50]
+**** TODO Prompt for a new folder
+*** DONE Add scrollbar to the canvas
+    Image scrollbar is on the top and left. When the image is too
+    large you can't access the right and bottom side of the app.
+    CLOSED: [2017-04-05 Wed 16:44]
 *** ISSUE I need access to the NAS for the actual data
 **** RESOLVED Copied some data but still need access
      CLOSED: [2017-03-27 Mon 16:31]

@@ -2,7 +2,8 @@ from PIL import Image, ImageTk, ImageDraw
 import numpy as np
 import os
 from collections import OrderedDict
-import exifread
+from PIL.ExifTags import TAGS
+
 
 ROI_TYPES = (
     "Overstory",
@@ -16,6 +17,11 @@ ROI_COLORS = {
     "Understory":"blue",
     "In Between":"black",
     "Openland":"green"
+}
+
+CANVAS_SIZE = {
+    "width":1600,
+    "height":1200,
 }
 
 STATS = ("R", "G", "B", "VI", "coord")
@@ -34,6 +40,7 @@ class myImage(object):
         self.imfile = imfile
         self.name = os.path.basename(imfile)
         self.directory = os.path.dirname(imfile)
+        self.camera_id = ""
 
         # ROI
         self.coords = OrderedDict()
@@ -96,13 +103,34 @@ class myImage(object):
         ----------
         dictionary of metadata
         """
-        
+        if hasattr(self, "_metadata"):
+            self._metadata['Camera_d'] = self.camera_id
+            return self._metadata
         meta = {}
         meta['Directory'] = self.directory
         meta['Image_Name'] = self.name
 
         # TODO: code to set Camera_id and Date taken
-        meta['Camera_id'] = None
-        meta['Date'] = None
-
+        meta['Camera_id'] = self.camera_id
+        
+        with Image.open(self.imfile) as img:
+            info = img._getexif()
+            for tag, value in info.items():
+                decoded = TAGS.get(tag, tag)
+                if decoded == "DateTimeOriginal":
+                    meta["Date"] = value
+        self._metadata = meta
         return meta
+
+
+def main():
+    ''' for debugging '''
+    directory = '/home/younghoon/data/phenology/BROW022/00430/20161028141801'
+    imfiles = [os.path.join(directory, f) for f in os.listdir(directory)]
+
+    for imfile in imfiles:
+        img = myImage(imfile)
+        pass
+
+if __name__=="__main__":
+    main()
