@@ -35,10 +35,18 @@ This is more complicated. You have to modify the STATS variable in
 utils.py, but the output file save the result. I need to test this.
 
 ** Issues
-*** ISSUE I need access to the NAS for the actual data
 *** ISSUE Need code for extracting Camera_id and Date from the image
 On the random test images I gathered, Aditye's code using exifread
 doesn't work.  If you want to play with it, you can write the code in
 utils.py. Search for TODO and replace None with your code.
+*** TODO IO - single input and output per camera
+The input will be a folder associated with a camera.
+**** TODO Arrange the images in the folder by date
+**** TODO Output: create indicator for change in camera position
 *** TODO Create a button to save without closing
+Don't close app on "save and close". Prompt for a new folder
+*** ISSUE Add scrollbar to the canvas
+*** ISSUE I need access to the NAS for the actual data
+**** RESOLVED Copied some data but still need access
+     CLOSED: [2017-03-27 Mon 16:31]
 *** TODO Test modifying ROI statistics
