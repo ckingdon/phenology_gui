@@ -16,7 +16,7 @@ from collections import OrderedDict
 import csv
 import ast
 
-debug = True
+debug = False
 
 class PhenoSession(tk.Tk):
     """
