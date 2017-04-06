@@ -80,8 +80,13 @@ class myImage(object):
         dict: dictionary with <ROI>_<STAT> as key
         """
         with Image.open(self.imfile) as img:
-            stats = {}
             R,G,B = img.split()
+            stats = {
+                'overall_R':np.array(R).mean(),
+                'overall_G':np.array(G).mean(),
+                'overall_B':np.array(B).mean()
+            }
+
             for roi in ROI_TYPES:
                 # generate polygon from coordinates
                 polygon = [tuple(coord) for coord in self.coords[roi]]
@@ -90,7 +95,7 @@ class myImage(object):
                 maskIm = Image.new('L', (R.width, R.height), 1) 
                 if len(polygon) > 2:
                     # unmask region
-                    ImageDraw.Draw(maskIm).polygon(polygon, outline=0, fill=0) 
+                    ImageDraw.Draw(maskIm).polygon(polygon, outline=0, fill=0)
 
                 # channels masked with ROI
                 R_masked = np.ma.array(R, mask=maskIm)

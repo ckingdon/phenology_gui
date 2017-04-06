@@ -92,7 +92,8 @@ class PhenoSession(tk.Tk):
         with open(outpath, "w+") as outfile:
             # create list of field names
             fieldnames = ['Camera_id', 'Directory',
-                          'Image_Name', 'Date', 'Processed', 'new_ROI']
+                          'Image_Name', 'Date', 'Processed', 'new_ROI',
+                          'overall_B', 'overall_R', 'overall_G']
             for stat in STATS:
                 for roi in ROI_TYPES:
                     fieldnames.append("_".join([roi, stat]))
@@ -170,7 +171,7 @@ class PhenoSession(tk.Tk):
         """ 
         Mark image as processed and move to next image
         """
-        self.images[img_name].camera_id = camera_id
+        self.images[img_name].camera_id = self.camera_id.get()
 
         # save coordinates
         self.curcoords = self.images[img_name].coords
