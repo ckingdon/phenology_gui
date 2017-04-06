@@ -27,6 +27,10 @@ Python 3 and a few external modules (install them with pip install
        - i.e. [(3,4), (10, 10), (5,2)]
    - This is the file you can load a session with. 
 
+5. Hotkeys
+   - Enter: finalize image
+   - Space: apply previous ROI
+   - Right arrow: skip to next image
 ** Notes
 *** Modifying ROI types
 To modify the ROI types, you can edit the ROI_TYPES and ROI_COLORS variables in utils.py.
@@ -42,17 +46,20 @@ CANVAS_SIZE variable.
 ** Issues
 *** DONE Get Camera_id and image Date
     CLOSED: [2017-04-05 Wed 17:50]
-*** STARTED IO - single input and output per camera
+*** DONE IO - single input and output per camera
+    CLOSED: [2017-04-06 Thu 00:51]
 The input will be a folder associated with a camera.
 **** DONE Read all of .jpg files in the subdirectories
      CLOSED: [2017-04-05 Wed 18:42]
-**** ISSUE Large memory requirement
+**** RESOLVED Large memory requirement
+     CLOSED: [2017-04-06 Thu 00:50]
 The current implementation keeps all the images around.
 i.e. for 200 images, I had 4gb memory overhead.
 
 Fix this so that only current image is opened.
-**** TODO Arrange the images in the folder by date
-**** TODO Output: create indicator for change in camera position
+**** DONE Arrange the images in the folder by date
+     CLOSED: [2017-04-06 Thu 00:50]
+*** TODO Output: create indicator for change in camera position
 *** STARTED Create a button to save without closing
 **** DONE Don't close app on "save". 
      CLOSED: [2017-04-05 Wed 16:50]

@@ -16,7 +16,7 @@ from collections import OrderedDict
 import csv
 import ast
 
-debug = False
+debug = True
 
 class PhenoSession(tk.Tk):
     """
@@ -30,7 +30,6 @@ class PhenoSession(tk.Tk):
         self.camera_id = tk.StringVar() # current camera_id
         self.camera_id.set("Camera ID")
         self.roi = tk.StringVar() # current roi selection
-        self.curframe = None
         self.curcoords = None
         self.done = {}
         self.curdir = None
@@ -41,27 +40,35 @@ class PhenoSession(tk.Tk):
 
         else:
             if debug is True:
-                directory = '/home/younghoon/data/phenology/BARR002/'
+                directory = '/home/younghoon/data/phenology/'
             else:
                 # change this to askdirectory
                 directory = filedialog.askdirectory()
-            imfiles = self.read_directory(directory)                
+            images = self.read_directory(directory)
 
-            self.curdir = os.path.dirname(imfiles[0])
-            for imfile in imfiles:
+            for image in images:
                 # populate dictionary with images
-                img = myImage(imfile)
-                self.images[img.name] = img
+                self.images[image.name] = image
 
         # create gui
         self.create_gui(parent)
+        
+        firstImg = list(self.images.items())[0][1]
+        self.display_image(firstImg.name)
+        self.root.bind('<Return>',
+                       lambda x: self.finalize(self.imageframe.image.name))
+        self.root.bind('<space>',
+                       lambda x: self.prev_roi(self.imageframe.image.name))
+        self.root.bind('<Right>',
+                       lambda x: self.next_image())
+        
 
     def read_directory(self, directory):
         """ 
         Walk through directory and read jpg files. 
-        Return list of image file paths 
+        Return list of myImage objects sorted by date
         """
-
+        
         imfiles = []
         for (dirpath, dirnames, filenames) in os.walk(directory):
             for filename in filenames:
@@ -69,7 +76,10 @@ class PhenoSession(tk.Tk):
                 if ext == ".jpg" or ext == ".jpeg":
                     imfiles.append(os.path.join(dirpath,filename))
 
-        return imfiles
+        images = [myImage(f) for f in imfiles]
+
+        # sort by date
+        return sorted(images, key=lambda x: x.date)
         
     def save(self):
         """ 
@@ -133,17 +143,14 @@ class PhenoSession(tk.Tk):
         display the current image
         """
         if img_name is not None:
-            if self.curframe is not None:
-                self.curframe.pack_forget()
-            self.curframe = self.imageframes[img_name]
-            self.curframe.pack()
+            self.imageframe.load_image(self.images[img_name])
 
             # update filelist
             self.filelist.clear_selection()
             self.filelist.select(img_name)
 
             # display image name
-            self.mainframe.set_label(self.images[img_name].imfile)
+            self.mainframe.set_label(self.images[img_name])
 
             self.root.wm_title("Phenology - " + img_name)
 
@@ -153,7 +160,7 @@ class PhenoSession(tk.Tk):
             if found:
                 self.display_image(img_name)
                 return
-            if img_name == self.curframe.image.name:
+            if img_name == self.imageframe.image.name:
                 found = True
                 continue
 
@@ -186,8 +193,14 @@ class PhenoSession(tk.Tk):
         Clear roi of a myImage object and reset canvas
         """
         self.images[img_name].clear_roi()
-        self.imageframes[img_name].canvas.delete("lines", "points")
+        self.imageframe.canvas.delete("lines", "points")
 
+    def clear_canvas(self, img_name):
+        """ 
+        Clear roi of a myImage object and reset canvas
+        """
+        self.imageframe.canvas.delete("image")
+        
     def prev_roi(self, img_name):
         """ 
         Copy ROI from previously finalized image
@@ -201,7 +214,7 @@ class PhenoSession(tk.Tk):
             coord = list(self.curcoords[roi])
             self.images[img_name].coords[roi] = coord
 
-        self.curframe.draw_polygons(self.images[img_name].coords)
+        self.imageframe.draw_polygons(self.images[img_name].coords)
 
     def create_gui(self, parent):
         # main window
@@ -218,7 +231,7 @@ class PhenoSession(tk.Tk):
         self.mainframe.pack(side=tk.LEFT, fill=tk.BOTH)
 
         # create filelist
-        self.filelist = FileList(self.mw, self, self.images)
+        self.filelist = FileList(self.mw, self)
         self.filelist.pack(side=tk.LEFT, fill=tk.BOTH)
 
         # populate listbox with files
@@ -226,18 +239,9 @@ class PhenoSession(tk.Tk):
             self.filelist.listbox.insert(tk.END, img_name)
             if img_name in self.done:
                 self.filelist.highlight(img_name)            
-        
-        
-        # create image frames
-        self.imageframes = {}
-        for i, img_name in enumerate(self.images):
-            self.imageframes[img_name] = ImageFrame(self.mainframe,
-                                                        self,
-                                                        self.images[img_name])
-            self.imageframes[img_name].draw_polygons(
-                self.images[img_name].coords)
-            if i == 0:
-                self.display_image(img_name)
+
+        self.imageframe = ImageFrame(self.mainframe, self)
+        self.imageframe.pack()
 
 class MainFrame(tk.Frame):
     def __init__(self, parent, session):
@@ -246,8 +250,10 @@ class MainFrame(tk.Frame):
         self.label = tk.Label(self, text="Current file: ")
         self.label.pack(side=tk.TOP, fill=tk.X)
 
-    def set_label(self, img_name):
-        self.label.config(text="Current file: " + img_name)
+    def set_label(self, img):
+        date, time = img.date.split(" ")
+        self.label.config(text="Current file: " + img.imfile +
+                          "   Date: " + date + "   Time: " + time)
         self.label.update_idletasks()
 
     def clear_label(self):
@@ -260,9 +266,8 @@ class FileList(tk.Frame):
 
     Parameters
     ----------
-    MyImgs: List of MyImage objects
     """
-    def __init__(self, parent, session, myImgs):
+    def __init__(self, parent, session):
         self.session = session
         tk.Frame.__init__(self, parent)
         
@@ -312,14 +317,14 @@ class controlBar(tk.Frame):
         clear_roi_button = tk.Button(
             self, text="Clear ROI",
             command = lambda: self.session.clear_roi(
-                self.session.curframe.image.name))
+                self.session.imageframe.image.name))
         clear_roi_button.config(height=5, width=10)
         clear_roi_button.grid(row=1, column=0, sticky=tk.W+tk.E)
 
         prev_roi_button = tk.Button(
             self, text="Apply\nPrevious\nROI",
             command= lambda: self.session.prev_roi(
-                self.session.curframe.image.name))
+                self.session.imageframe.image.name))
         prev_roi_button.config(height=5, width=10)
         prev_roi_button.grid(row=2, column=0, sticky=tk.W+tk.E)
 
@@ -333,7 +338,7 @@ class controlBar(tk.Frame):
         finalize_button = tk.Button(
             self, text="Finalize\nImage",
             command = lambda: self.session.finalize(
-                self.session.curframe.image.name))
+                self.session.imageframe.image.name))
         finalize_button.config(height=5, width=10)
         finalize_button.grid(row=4, column=0, sticky=tk.W+tk.E)
 
@@ -349,20 +354,20 @@ class controlBar(tk.Frame):
                                    textvariable=self.session.camera_id)
         camera_id_input.grid(row=i+7, column=0, sticky=tk.W+tk.E)
 
+        clear_canvas_button = tk.Button(
+            self, text="Clear canvas",
+            command = lambda: self.session.clear_canvas(
+                self.session.imageframe.image.name))
+        clear_canvas_button.config(height=5, width=10)
+        clear_canvas_button.grid(row=i+8, column=0, sticky=tk.W+tk.E)
+        
 class ImageFrame(tk.Frame):
     """
     Class to represent the image frame
     """
-    def __init__(self, parent, session, myImg):
+    def __init__(self, parent, session):
         self.session = session
         tk.Frame.__init__(self, parent)
-
-        # variables
-        self.image = myImg
-
-        # create image frame
-        image = Image.open(myImg.imfile)
-        photo = ImageTk.PhotoImage(image)
 
         xscrollbar = tk.Scrollbar(self, orient=tk.HORIZONTAL)
         yscrollbar = tk.Scrollbar(self)
@@ -370,16 +375,11 @@ class ImageFrame(tk.Frame):
         xscrollbar.pack(side=tk.TOP, fill=tk.X)
         yscrollbar.pack(side=tk.LEFT, fill=tk.Y)
         
-        l,w = image.size
         self.canvas = tk.Canvas(self, bg='white',
                                 height=CANVAS_SIZE['height'],
                                 width=CANVAS_SIZE['width'],
-                                scrollregion=(0, 0, image.size[0],
-                                              image.size[1]),
                                 xscrollcommand=xscrollbar.set,
                                 yscrollcommand=yscrollbar.set)
-        self.canvas.image = photo
-        self.canvas.create_image(0, 0, image=photo, anchor=tk.NW)
         self.canvas.update()
         self.canvas.bind("<Button-1>", self.detect_coord)
         self.canvas.bind("<Button-3>",
@@ -388,6 +388,23 @@ class ImageFrame(tk.Frame):
 
         xscrollbar.config(command=self.canvas.xview)
         yscrollbar.config(command=self.canvas.yview)
+
+
+    def load_image(self, myImg):
+        self.canvas.delete("image")
+        if hasattr(self, "imageObj"):
+            self.imageObj.close()
+        
+        self.image = myImg
+        self.imageObj = Image.open(myImg.imfile)
+        photo = ImageTk.PhotoImage(self.imageObj)
+        self.canvas.config(scrollregion=(0, 0, self.imageObj.size[0],
+                                          self.imageObj.size[1]))
+        self.canvas.image = photo
+        self.canvas.create_image(0, 0, image=photo, anchor=tk.NW,
+                                 tags="image")
+        self.draw_polygons(self.image.coords)
+        
 
     def detect_coord(self, event, final=False):
         # detect the coordinates of user click

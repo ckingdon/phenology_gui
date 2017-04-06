@@ -41,6 +41,7 @@ class myImage(object):
         self.name = os.path.basename(imfile)
         self.directory = os.path.dirname(imfile)
         self.camera_id = ""
+        self.date
 
         # ROI
         self.coords = OrderedDict()
@@ -51,6 +52,21 @@ class myImage(object):
         """
         for roi in ROI_TYPES:
             self.coords[roi] = []
+
+    @property
+    def date(self):
+        if hasattr(self, "_date"):
+            return self._date
+        img = Image.open(self.imfile)
+        info = img._getexif()
+        for tag, value in info.items():
+            decoded = TAGS.get(tag, tag)
+            if decoded == "DateTimeOriginal":
+                date = value
+                break
+        img.close()
+        self._date = date
+        return date
 
     @property
     def stats(self):
@@ -112,13 +128,8 @@ class myImage(object):
 
         # TODO: code to set Camera_id and Date taken
         meta['Camera_id'] = self.camera_id
-        
-        with Image.open(self.imfile) as img:
-            info = img._getexif()
-            for tag, value in info.items():
-                decoded = TAGS.get(tag, tag)
-                if decoded == "DateTimeOriginal":
-                    meta["Date"] = value
+        meta["Date"] = self.date
+
         self._metadata = meta
         return meta
 
