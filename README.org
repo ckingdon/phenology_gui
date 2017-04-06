@@ -49,7 +49,8 @@ CANVAS_SIZE variable.
 **** RESOLVED Camera_ID
      CLOSED: [2017-04-06 Thu 13:33]
 Assume that the input directory is the camera_id.
-*** TODO RGB for entire image
+*** DONE RGB for entire image
+    CLOSED: [2017-04-06 Thu 17:42]
 *** DONE IO - single input and output per camera
     CLOSED: [2017-04-06 Thu 00:51]
 The input will be a folder associated with a camera.
@@ -65,10 +66,12 @@ Fix this so that only current image is opened.
      CLOSED: [2017-04-06 Thu 00:50]
 *** DONE Output: create indicator for change in camera position
     CLOSED: [2017-04-06 Thu 13:24]
-*** STARTED Create a button to save without closing
+*** DONE Create a button to save without closing
+    CLOSED: [2017-04-06 Thu 17:42]
 **** DONE Don't close app on "save". 
      CLOSED: [2017-04-05 Wed 16:50]
-**** TODO Prompt for a new folder
+**** DONE Prompt for a new folder
+     CLOSED: [2017-04-06 Thu 17:42]
 *** DONE Add scrollbar to the canvas
     Image scrollbar is on the top and left. When the image is too
     large you can't access the right and bottom side of the app.

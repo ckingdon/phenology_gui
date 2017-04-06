@@ -18,14 +18,23 @@ import ast
 
 debug = False
 
-class PhenoSession(tk.Tk):
+class PhenoSession():
     """
     Class for managing a GUI session
     """
-    def __init__(self, parent, load):
+    
+    def __init__(self):
+        self.mw = tk.Tk()
+        self.setup(self.mw)
+        self.mw.mainloop()
+
+    def setup(self, parent):
+        if debug:
+            load=False
+        else:
+            load = messagebox.askyesno("Load session", "Load output file?")
 
         # member variables
-        self.root = parent
         self.images = OrderedDict()
         self.camera_id = tk.StringVar() # current camera_id
         self.roi = tk.StringVar() # current roi selection
@@ -54,11 +63,11 @@ class PhenoSession(tk.Tk):
         
         firstImg = list(self.images.items())[0][1]
         self.display_image(firstImg.name)
-        self.root.bind('<Return>',
+        self.mw.bind('<Return>',
                        lambda x: self.finalize(self.imageframe.image.name))
-        self.root.bind('<space>',
+        self.mw.bind('<space>',
                        lambda x: self.prev_roi(self.imageframe.image.name))
-        self.root.bind('<Right>',
+        self.mw.bind('<Right>',
                        lambda x: self.next_image())
         
 
@@ -137,7 +146,6 @@ class PhenoSession(tk.Tk):
         """ 
         Save workspace in a log file and close app
         """
-        self.save()
         self.mw.destroy()
 
     def display_image(self, img_name=None):
@@ -154,7 +162,7 @@ class PhenoSession(tk.Tk):
             # display image name
             self.mainframe.set_label(self.images[img_name])
 
-            self.root.wm_title("Phenology - " + img_name)
+            self.mw.wm_title("Phenology - " + img_name)
 
     def next_image(self):
         found = False
@@ -214,7 +222,6 @@ class PhenoSession(tk.Tk):
 
     def create_gui(self, parent):
         # main window
-        self.mw = parent
         h = self.mw.winfo_screenheight()
         w = self.mw.winfo_screenwidth()
 
@@ -356,6 +363,14 @@ class controlBar(tk.Frame):
                 self.session.imageframe.image.name))
         clear_canvas_button.config(height=5, width=10)
         clear_canvas_button.grid(row=i+8, column=0, sticky=tk.W+tk.E)
+
+        quit_button = tk.Button(
+            self, text="Quit",
+            command = lambda : self.session.quit())
+        quit_button.config(height=5, width=10)        
+        quit_button.grid(row=i+9, column=0, sticky=tk.W+tk.E)
+
+        
         
 class ImageFrame(tk.Frame):
     """
@@ -457,10 +472,14 @@ class ImageFrame(tk.Frame):
                                                 )
                         x0, y0 = x, y
 
-root = tk.Tk()
-if debug:
-    load=False
-else:
-    load = messagebox.askyesno("Load session", "Load output file?")
-session = PhenoSession(root, load)
-root.mainloop()
+reset = False
+while True:
+    PhenoSession()
+
+    root = tk.Tk()
+    reset = messagebox.askyesno("New session", "Start new session??")
+    root.destroy()
+
+    if reset == False:
+        break
+
