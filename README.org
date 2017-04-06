@@ -46,6 +46,10 @@ CANVAS_SIZE variable.
 ** Issues
 *** DONE Get Camera_id and image Date
     CLOSED: [2017-04-05 Wed 17:50]
+**** RESOLVED Camera_ID
+     CLOSED: [2017-04-06 Thu 13:33]
+Assume that the input directory is the camera_id.
+*** TODO RGB for entire image
 *** DONE IO - single input and output per camera
     CLOSED: [2017-04-06 Thu 00:51]
 The input will be a folder associated with a camera.
@@ -59,7 +63,8 @@ i.e. for 200 images, I had 4gb memory overhead.
 Fix this so that only current image is opened.
 **** DONE Arrange the images in the folder by date
      CLOSED: [2017-04-06 Thu 00:50]
-*** TODO Output: create indicator for change in camera position
+*** DONE Output: create indicator for change in camera position
+    CLOSED: [2017-04-06 Thu 13:24]
 *** STARTED Create a button to save without closing
 **** DONE Don't close app on "save". 
      CLOSED: [2017-04-05 Wed 16:50]

@@ -28,7 +28,6 @@ class PhenoSession(tk.Tk):
         self.root = parent
         self.images = OrderedDict()
         self.camera_id = tk.StringVar() # current camera_id
-        self.camera_id.set("Camera ID")
         self.roi = tk.StringVar() # current roi selection
         self.curcoords = None
         self.done = {}
@@ -68,7 +67,9 @@ class PhenoSession(tk.Tk):
         Walk through directory and read jpg files. 
         Return list of myImage objects sorted by date
         """
-        
+
+        camera_id = os.path.split(directory)[1]
+        self.camera_id.set(camera_id)
         imfiles = []
         for (dirpath, dirnames, filenames) in os.walk(directory):
             for filename in filenames:
@@ -91,7 +92,7 @@ class PhenoSession(tk.Tk):
         with open(outpath, "w+") as outfile:
             # create list of field names
             fieldnames = ['Camera_id', 'Directory',
-                          'Image_Name', 'Date', 'Processed']
+                          'Image_Name', 'Date', 'Processed', 'new_ROI']
             for stat in STATS:
                 for roi in ROI_TYPES:
                     fieldnames.append("_".join([roi, stat]))
@@ -169,12 +170,6 @@ class PhenoSession(tk.Tk):
         """ 
         Mark image as processed and move to next image
         """
-        # get camera_id
-        camera_id = self.camera_id.get()
-        if camera_id == "Camera ID":
-            messagebox.showerror("Error: Camera ID needed",
-                                 "Please set the Camera ID")
-            return
         self.images[img_name].camera_id = camera_id
 
         # save coordinates
@@ -413,6 +408,7 @@ class ImageFrame(tk.Frame):
         roi = self.session.roi.get()
 
         if roi in ROI_TYPES:
+            self.image.new_ROI = True
             self.image.coords[roi].append((x, y))
             x0 = None
             y0 = None

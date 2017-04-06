@@ -45,6 +45,7 @@ class myImage(object):
 
         # ROI
         self.coords = OrderedDict()
+        self.new_ROI = False # True: if detect point; False: if clear_ROI
         self.clear_roi()
 
     def clear_roi(self):
@@ -52,6 +53,7 @@ class myImage(object):
         """
         for roi in ROI_TYPES:
             self.coords[roi] = []
+        self.new_ROI = False
 
     @property
     def date(self):
@@ -107,7 +109,7 @@ class myImage(object):
                     stats['_'.join([roi,'G'])] = None
                     stats['_'.join([roi,'B'])] = None
                     stats['_'.join([roi,'VI'])] = None
-
+            stats["new_ROI"] = self.new_ROI
             return(stats)
 
     @property
@@ -120,7 +122,7 @@ class myImage(object):
         dictionary of metadata
         """
         if hasattr(self, "_metadata"):
-            self._metadata['Camera_d'] = self.camera_id
+            self._metadata['Camera_id'] = self.camera_id
             return self._metadata
         meta = {}
         meta['Directory'] = self.directory
