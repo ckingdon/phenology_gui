@@ -127,13 +127,18 @@ class PhenoSession():
                 img_dir = row['Directory']
                 img_name = row['Image_Name']
                 imfile = os.path.join(img_dir, img_name)
+                camera_id = row['Camera_id']
                 img = myImage(imfile)
 
                 self.images[img_name] = img
+                self.images[img_name].camera_id = camera_id
+
                 for roi in ROI_TYPES:
                     self.images[img_name].coords[roi] = ast.literal_eval(
                         row["_".join([roi, "coord"])])
-                        
+
+                if row['new_ROI'] == "True":
+                    self.images[img_name].new_ROI = True
 
                 if i == 0:
                     self.curdir = img_dir
