@@ -151,7 +151,10 @@ class PhenoSession():
         """ 
         Save workspace in a log file and close app
         """
-        self.mw.destroy()
+        sure = messagebox.askyesno("Quit session",
+                                   "Quit this session?\nSession will NOT be saved.")
+        if sure is True:
+            self.mw.destroy()
 
     def display_image(self, img_name=None):
         """ 
